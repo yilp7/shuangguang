@@ -1,0 +1,35 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>directions/directions_0.png</file>
+        <file>directions/directions_1.png</file>
+        <file>directions/directions_2.png</file>
+        <file>directions/directions_3.png</file>
+        <file>directions/directions_4.png</file>
+        <file>directions/directions_5.png</file>
+        <file>directions/directions_6.png</file>
+        <file>directions/directions_7.png</file>
+        <file>directions/directions_8.png</file>
+        <file>operations/operations_0.png</file>
+        <file>operations/operations_1.png</file>
+        <file>operations/operations_2.png</file>
+        <file>operations/operations_3.png</file>
+        <file>operations/operations_4.png</file>
+        <file>operations/operations_5.png</file>
+        <file>video_control/capture.png</file>
+        <file>video_control/play_start.png</file>
+        <file>video_control/play_stop.png</file>
+        <file>video_control/record_start.png</file>
+        <file>video_control/record_stop.png</file>
+    </qresource>
+    <qresource prefix="/logo">
+        <file>1.png</file>
+        <file>2.png</file>
+        <file>3.png</file>
+        <file>yjs3.png</file>
+        <file>yjs4.png</file>
+        <file>yjs5.png</file>
+    </qresource>
+    <qresource prefix="/qt">
+        <file>etc/qt.conf</file>
+    </qresource>
+</RCC>
