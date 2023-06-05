@@ -28,6 +28,7 @@
         <file>yjs3.png</file>
         <file>yjs4.png</file>
         <file>yjs5.png</file>
+        <file>semi_CAS.png</file>
     </qresource>
     <qresource prefix="/qt">
         <file>etc/qt.conf</file>
