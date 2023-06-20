@@ -748,7 +748,8 @@ void Demo::lens_button_released(int id)
         case 2:
         case 3:
 //        case 4: send_str = "FF010000000001"; goto send_data;
-        case 4: send_str = "FF0B000000000B"; goto send_data;
+//        case 4: send_str = "FF0B000000000B"; goto send_data;
+        case 4: send_str = lens_stop; goto send_data;
         default: return;
         }
         send_data:
@@ -1221,6 +1222,7 @@ void Demo::read_command_file()
         zoom_in    = user_cmd.readLine(17).simplified();
         focus_far  = user_cmd.readLine(17).simplified();
         focus_near = user_cmd.readLine(17).simplified();
+        lens_stop  = user_cmd.readLine(17).simplified();
 //        qDebug() << zoom_in << zoom_out << focus_far << focus_near;
     }
     else {
@@ -1228,6 +1230,7 @@ void Demo::read_command_file()
         zoom_out   = "FF0B010000000C";
         focus_near = "FF0B002000002B";
         focus_far  = "FF0B004000004B";
+        lens_stop  = "FF0B000000000B";
     }
 
     user_cmd.close();

@@ -159,6 +159,7 @@ private:
     QString             zoom_out;
     QString             focus_near;
     QString             focus_far;
+    QString             lens_stop;
 
 };
 #endif // DEMO_H
