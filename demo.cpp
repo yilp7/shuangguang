@@ -712,9 +712,10 @@ void Demo::lens_button_pressed(int id)
         send_data:
 //        com.write(QByteArray((char*)&send, 8));
         bool ok;
-        for (int i = 0; i < 7; i++) send.append(send_str.mid(i * 2, 2).toInt(&ok, 16));
+//        qDebug() << "send_str" << send_str;
+        for (int i = 0; i < 7; i++) send.append(send_str.midRef(i * 2, 2).toInt(&ok, 16));
         for (int i = 0; i < 7; i++) temp += QString::asprintf(" %02X", (uchar)send[i]);
-        qDebug("%s", qPrintable(temp));
+        qDebug() << "sent" << temp;
         NET_DVR_SerialSend(com_handle[0], 1, send.data(), 11);
     }
 }
@@ -1216,10 +1217,11 @@ void Demo::read_command_file()
     QFile user_cmd("user_cmd");
     user_cmd.open(QIODevice::ReadOnly);
     if (user_cmd.isOpen()) {
-        zoom_out   = user_cmd.readLine(14).simplified();
-        zoom_in    = user_cmd.readLine(14).simplified();
-        focus_far  = user_cmd.readLine(14).simplified();
-        focus_near = user_cmd.readLine(14).simplified();
+        zoom_out   = user_cmd.readLine(17).simplified();
+        zoom_in    = user_cmd.readLine(17).simplified();
+        focus_far  = user_cmd.readLine(17).simplified();
+        focus_near = user_cmd.readLine(17).simplified();
+//        qDebug() << zoom_in << zoom_out << focus_far << focus_near;
     }
     else {
         zoom_in    = "FF0B008000008B";
