@@ -14,6 +14,8 @@ void CALLBACK fsdcb(LONG lSerialHandle, LONG lChannel, char *pRecvDataBuffer, DW
 Demo::Demo(QWidget *parent)
     : QMainWindow(parent),
     ui(new Ui::Demo),
+    show_rg1(true),
+    show_rg2(true),
     h_play{-1, -1},
     logged_in{false},
     playing{false},
@@ -29,18 +31,22 @@ Demo::Demo(QWidget *parent)
     buffer_in{0},
     in_len(7),
     angle_h(0),
-    angle_v(0)
+    angle_v(0),
+    lens_address(0x01),
+    ftp_settings(NULL)
 {
     ui->setupUi(this);
     wnd = this;
+
+    ui->UNUSED->hide();
 
     NET_DVR_Init();
 
     read_command_file();
 
 //    ui->NAME->setStyleSheet("color:#2069B1;");
-    ui->SPEED_EDIT_1->hide();
-    ui->SPEED_EDIT_2->hide();
+//    ui->SPEED_EDIT_1->hide();
+//    ui->SPEED_EDIT_2->hide();
 //    ui->DEHAZE_BTN->hide();
 
     display[0] = ui->DISPLAY_1;
@@ -173,6 +179,8 @@ Demo::Demo(QWidget *parent)
 
     connect(ui->DISPLAY_2, SIGNAL(ptz_target(QPoint)), this, SLOT(point_ptz_to_target(QPoint)));
 
+    ftp_settings = new FTPSettings();
+
 //    this->show();
 }
 
@@ -180,6 +188,7 @@ Demo::~Demo()
 {
     delete ui;
     NET_DVR_Cleanup();
+    delete ftp_settings;
 }
 
 void CALLBACK Demo::real_data_call_back_0(LONG lPlayHandle, DWORD dwDataType, BYTE *pBuffer, DWORD dwBufSize, void *pUser) {
@@ -218,42 +227,96 @@ void Demo::move_to_dest(QString src, QString dst)
 void Demo::resizeEvent(QResizeEvent *event)
 {
     QRect window = this->geometry();
-//    qDebug("window: %d, %d", window.width(), window.height());
-    QRect region[2] = {display[0]->geometry(), display[1]->geometry()};
-    QPoint center[2] = {display[0]->center, display[1]->center};
-    int height = (window.height() - 20 - 40 - 16) * 16 / 31,
-        width = height * 5 / 3;
-    int width_constraint = window.width() - 20 - 250,
-        height_constraint = width_constraint * 3 / 5;
-    if (height < height_constraint) height_constraint = height, width_constraint = height * 5 / 3;
-    if (width > width_constraint) width = width_constraint, height = height_constraint;
-//    qDebug("w1 %d, h1 %d", width, height * 15 / 16);
-//    qDebug("w2 %d, h2 %d", width, height);
 
-    center[0] = center[0] * width / region[0].width();
-    center[1] = center[1] * width / region[1].width();
-    region[0].setSize(QSize(width, height * 15 / 16));
-    region[1].setRect(250, 20 + height * 15 / 16 + 40, width, height);
+    if (show_rg1 && show_rg2) {
+//        qDebug("window: %d, %d", window.width(), window.height());
+        QRect region[2] = {ui->DISPLAY_GRP_1->geometry(), ui->DISPLAY_GRP_2->geometry()};
+        QPoint center[2] = {display[0]->center, display[1]->center};
 
-    cb_mutex[0].lock();
-    cb_mutex[1].lock();
-    display[0]->setGeometry(region[0]);
-    display[0]->update_roi(center[0]);
-    display[1]->setGeometry(region[1]);
-    display[1]->update_roi(center[1]);
-    cb_mutex[0].unlock();
-    cb_mutex[1].unlock();
+        // display 1: 80:45 (16:9) display 2: 80:48 (5:3)
+        // 10 as top spacing, 20 as display 1 control group height, 10 as mid spacing, 20 as display 2 ctrl grp h, 16 as bottom spacing
+        // total spacing: 76
+        int height_constraint = (window.height() - 76) * 48 / 93, // height of display 2
+            width = height_constraint * 5 / 3;
+        // 250 as left padding, 20 as right padding
+        int width_constraint = window.width() - 270,
+            height = width_constraint * 3 / 5; // height constraint of display 2
+        if (height > height_constraint) height = height_constraint, width_constraint = height_constraint * 5 / 3;
+        if (width > width_constraint) width = width_constraint;
+//        qDebug("w1 %d, h1 %d", width, height * 15 / 16);
+//        qDebug("w2 %d, h2 %d", width, height);
 
-//    ui->SWITCH_GRP->move(20, 265 + (region[1].top() - 420) / 2);
-    ui->CONTROL_1->move(20, region[0].bottom() - 171);
-    ui->CONTROL_2->move(20, region[1].y());
-    ui->PTZ_GRP->move(20, region[1].y() + 180);
-    ui->LOGO->move(40, window.height() - 70);
-    ui->PLAY_GRP_2->move(250, region[1].y() - 20);
-    if (!playing[0]) display[0]->setPixmap(QPixmap::fromImage(QImage(":/logo/yjs5.png").scaled(display[0]->size() * 2 / 3, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
-    if (!playing[1]) display[1]->setPixmap(QPixmap::fromImage(QImage(":/logo/yjs5.png").scaled(display[1]->size() * 2 / 3, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
-//    qDebug("display region1 x: %d, y: %d, w: %d, h: %d\n", region[0].x(), region[0].y(), region[0].width(), region[0].height());
-//    qDebug("display region2 x: %d, y: %d, w: %d, h: %d\n", region[1].x(), region[1].y(), region[1].width(), region[1].height());
+        center[0] = center[0] * width / region[0].width();
+        center[1] = center[1] * width / region[1].width();
+        region[0].setRect(250, 10, width, height * 45 / 48 + 20);
+        // 10 as top spacing, 20 as display 1 control group, 20 as display 2 ctrl grp, 16 as bottom spacing
+        // total spacing: 66
+        int mid_spacing = window.height() - height * 93 / 48 - 66;
+        // 10 as top spacing
+        region[1].setRect(250, 10 + region[0].height() + mid_spacing, width, height + 20);
+
+        ui->DISPLAY_GRP_1->setGeometry(region[0]);
+        ui->DISPLAY_GRP_2->setGeometry(region[1]);
+
+        cb_mutex[0].lock();
+        display[0]->resize(width, height * 45 / 48);
+        display[0]->update_roi(center[0]);
+        cb_mutex[0].unlock();
+        cb_mutex[1].lock();
+        display[1]->resize(width, height);
+        display[1]->update_roi(center[1]);
+        cb_mutex[1].unlock();
+
+//        ui->SWITCH_GRP->move(20, 265 + (region[1].top() - 420) / 2);
+        ui->CONTROL_1->move(20, region[0].bottom() - 160);
+        ui->CONTROL_2->move(20, region[1].y() + 20);
+//        ui->PTZ_GRP->move(20, region[1].y() + 180);
+        ui->PTZ_GRP->move(20, window.height() - 230);
+        ui->LOGO->move(40, window.height() - 70);
+//        ui->PLAY_GRP_2->move(250, region[1].y() - 20);
+        if (!playing[0]) display[0]->setPixmap(QPixmap::fromImage(QImage(":/logo/yjs5.png").scaled(display[0]->size() * 2 / 3, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
+        if (!playing[1]) display[1]->setPixmap(QPixmap::fromImage(QImage(":/logo/yjs5.png").scaled(display[1]->size() * 2 / 3, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
+//        qDebug("display region1 x: %d, y: %d, w: %d, h: %d\n", region[0].x(), region[0].y(), region[0].width(), region[0].height());
+//        qDebug("display region2 x: %d, y: %d, w: %d, h: %d\n", region[1].x(), region[1].y(), region[1].width(), region[1].height());
+    }
+    else {
+        QRect region = (show_rg1 ? ui->DISPLAY_GRP_1 : ui->DISPLAY_GRP_2)->geometry();
+        QPoint center = (show_rg1 ? display[0] : display[1])->center;
+
+        // display 1: 80:45 (16:9) display 2: 80:48 (5:3)
+        // 10 as top spacing, 20 as display 1 control group height, 80 as bottom spacing
+        // total spacing: 110
+        int height_constraint = window.height() - 110, // height of visible display
+            width = height_constraint * 5 / 3;
+        // 250 as left padding, 20 as right padding
+        int width_constraint = window.width() - 270,
+            height = width_constraint * 3 / 5; // height constraint of display 2
+        if (height > height_constraint) height = height_constraint, width_constraint = height_constraint * 5 / 3;
+        if (width > width_constraint) width = width_constraint;
+
+        center = center * width / region.width();
+
+        if (show_rg1) {
+            region.setRect(250, 62, width, (show_rg1 ? height * 45 / 48 : height) + 20);
+            ui->DISPLAY_GRP_1->setGeometry(region);
+            cb_mutex[0].lock();
+            display[0]->resize(width, height * 45 / 48);
+            display[0]->update_roi(center);
+            cb_mutex[0].unlock();
+            ui->CONTROL_1->move(20, region.bottom() - 228);
+        }
+        else {
+            region.setRect(250, 50, width, (show_rg1 ? height * 45 / 48 : height) + 20);
+            ui->DISPLAY_GRP_2->setGeometry(region);
+            cb_mutex[1].lock();
+            display[1]->resize(width, height);
+            display[1]->update_roi(center);
+            cb_mutex[1].unlock();
+            ui->CONTROL_2->move(20, region.bottom() - 240);
+        }
+        ui->PTZ_GRP->move(20, window.height() - 150);
+        ui->LOGO->move(window.width() - 180, window.height() - 70);
+    }
 
     event->accept();
 }
@@ -566,7 +629,7 @@ void Demo::start_playing(int source) {
 
     playing[source] = true;
 //    ui->PLAY_BTN->setText("Stop");
-    play_grp->button(source)->setIcon(QIcon(":/icons/video_control/play_stop.png"));
+    play_grp->button(source)->setIcon(QIcon(":/icons/video_control/play_stop"));
     display[source]->update_roi(QPoint());
     display[source]->grab = true;
 
@@ -588,7 +651,7 @@ void Demo::stop_playing(int source) {
     h_play[source] = -1;
     playing[source] = false;
 //    ui->PLAY_BTN->setText("Play");
-    play_grp->button(source)->setIcon(QIcon(":/icons/video_control/play_start.png"));
+    play_grp->button(source)->setIcon(QIcon(":/icons/video_control/play_start"));
     display[source]->setPixmap(QPixmap::fromImage(QImage(":/logo/yjs5.png").scaled(display[source]->size() * 2 / 3, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
 
 //    if (source) {
@@ -606,14 +669,14 @@ void Demo::start_recording(int source) {
     NET_DVR_SaveRealData(h_play[source], (TEMP_PATH + "/" + vid_name[source]).toLatin1().data());
 //    vid_out[source].open(rec_name.toLatin1().data(), cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 25, cv::Size(w[source], h[source]), true);
     recording[source] = true;
-    record_grp->button(source)->setIcon(QIcon(":/icons/video_control/record_stop.png"));
+    record_grp->button(source)->setIcon(QIcon(":/icons/video_control/record_stop"));
 }
 
 void Demo::stop_recording(int source) {
     NET_DVR_StopSaveRealData(h_play[source]);
 //    vid_out[source].release();
     recording[source] = false;
-    record_grp->button(source)->setIcon(QIcon(":/icons/video_control/record_start.png"));
+    record_grp->button(source)->setIcon(QIcon(":/icons/video_control/record_start"));
 
     std::thread t(Demo::move_to_dest, TEMP_PATH + "/" + vid_name[source], save_path + "/" + vid_name[source]);
     t.detach();
@@ -680,7 +743,12 @@ void Demo::lens_button_pressed(int id)
     }
     else {
         QString send_str, temp;
-        QByteArray send;
+        QByteArray send(7, 0x00);
+        send[0] = 0xFF;
+        send[1] = lens_address;
+        send[4] = 0x00;
+        send[5] = 0x00;
+
         switch (id - 6) {
 /*
         case 1: send = 0x410000400001FF; goto send_data;
@@ -703,19 +771,25 @@ void Demo::lens_button_pressed(int id)
         case 3: send_str = "FF010100000002"; goto send_data;
         case 4: send_str = "FF010080000081"; goto send_data;
 */
+/*
         case 1: send_str = zoom_out;   goto send_data;
         case 2: send_str = zoom_in;    goto send_data; //8101040702FF
         case 3: send_str = focus_far;  goto send_data;
         case 4: send_str = focus_near; goto send_data;
+*/
+        case 1: send[2] = 0x00; send[3] = 0x40; check_sum(send); break;
+        case 2: send[2] = 0x00; send[3] = 0x20; check_sum(send); break;
+        case 3: send[2] = 0x01; send[3] = 0x00; check_sum(send); break;
+        case 4: send[2] = 0x00; send[3] = 0x80; check_sum(send); break;
         default: return;
         }
-        send_data:
+//        send_data:
 //        com.write(QByteArray((char*)&send, 8));
         bool ok;
 //        qDebug() << "send_str" << send_str;
-        for (int i = 0; i < 7; i++) send.append(send_str.midRef(i * 2, 2).toInt(&ok, 16));
+//        for (int i = 0; i < 7; i++) send.append(send_str.midRef(i * 2, 2).toInt(&ok, 16));
         for (int i = 0; i < 7; i++) temp += QString::asprintf(" %02X", (uchar)send[i]);
-        qDebug() << "sent" << temp;
+        qDebug() << "sent" + temp;
         NET_DVR_SerialSend(com_handle[0], 1, send.data(), 11);
     }
 }
@@ -736,7 +810,7 @@ void Demo::lens_button_released(int id)
     }
     else {
         QString send_str, temp;
-        QByteArray send;
+        QByteArray send(7, 0x00);
         switch (id - 6) {
 /*
         case 1: send_str = "FF0B000000000B"; goto send_data; //8101040700FF
@@ -749,15 +823,21 @@ void Demo::lens_button_released(int id)
         case 3:
 //        case 4: send_str = "FF010000000001"; goto send_data;
 //        case 4: send_str = "FF0B000000000B"; goto send_data;
-        case 4: send_str = lens_stop; goto send_data;
+//        case 4: send_str = lens_stop; goto send_data;
+        case 4:
+            send[0] = 0xFF;
+            send[1] = send[6] = lens_address;
+            send[2] = send[3] = send[4] = send[5] = 0x00;
+            break;
         default: return;
         }
         send_data:
 //        com.write(QByteArray((char*)&send, 8));
         bool ok;
-        for (int i = 0; i < 7; i++) send.append(send_str.mid(i * 2, 2).toInt(&ok, 16));
+//        for (int i = 0; i < 7; i++) send.append(send_str.mid(i * 2, 2).toInt(&ok, 16));
         for (int i = 0; i < 7; i++) temp += QString::asprintf(" %02X", (uchar)send[i]);
-        qDebug("%s", qPrintable(temp));
+//        qDebug("%s", qPrintable(temp));
+        qDebug() << "sent" + temp;
         NET_DVR_SerialSend(com_handle[0], 1, send.data(), 11);
     }
 }
@@ -831,6 +911,7 @@ void Demo::capture_button_clicked(int id) {
         cv::cvtColor(save, save, cv::COLOR_RGB2BGR);
         cv::imwrite((TEMP_PATH + "/" + pic_name).toLatin1().data(), save);
 //        ret = NET_DVR_CapturePicture(h_play[id], pic_name.toLatin1().data());
+        qDebug() << TEMP_PATH + "/" + pic_name << "->" << save_path + "/" + pic_name;
         std::thread t(Demo::move_to_dest, TEMP_PATH + "/" + pic_name, save_path + "/" + pic_name);
         t.detach();
     }
@@ -1019,28 +1100,51 @@ void Demo::keyPressEvent(QKeyEvent *event)
 {
     static QLineEdit *edit;
 
-    switch (event->key()) {
-    case Qt::Key_Return:
-    case Qt::Key_Enter:
-        if (!(this->focusWidget())) break;
-        edit = qobject_cast<QLineEdit*>(this->focusWidget());
-        if (!edit) break;
+    switch (event->modifiers()) {
+    case Qt::KeypadModifier:
+    case Qt::NoModifier:
+        switch (event->key()) {
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
+            if (!(this->focusWidget())) break;
+            edit = qobject_cast<QLineEdit*>(this->focusWidget());
+            if (!edit) break;
 
-        if (edit == ui->IP_EDIT_1) login_button_clicked(0);
-        else if (edit == ui->IP_EDIT_2) login_button_clicked(1);
-        else if (edit == ui->COM_EDIT) {
-            if (com) com->close();
-            setup_com(&com, edit->text());
+            if (edit == ui->IP_EDIT_1) login_button_clicked(0);
+            else if (edit == ui->IP_EDIT_2) login_button_clicked(1);
+            else if (edit == ui->COM_EDIT) {
+                if (com) com->close();
+                setup_com(&com, edit->text());
+            }
+            else if (edit == ui->ANGLE_H_EDIT || edit == ui->ANGLE_V_EDIT) on_SET_ANGLE_BTN_clicked();
+            else if (edit == ui->PTZ_ADDRESS_EDT) {
+                lens_address = edit->text().toInt();
+                if (lens_address < 0x01) lens_address = 0x01;
+                if (lens_address > 0x0F) lens_address = 0x0F;
+            }
+            this->focusWidget()->clearFocus();
+            break;
+        case Qt::Key_Escape:
+            this->focusWidget()->clearFocus();
+            break;
+        default:
+            break;
         }
-        else if (edit == ui->ANGLE_H_EDIT || edit == ui->ANGLE_V_EDIT) on_SET_ANGLE_BTN_clicked();
-        this->focusWidget()->clearFocus();
         break;
-    case Qt::Key_Escape:
-        this->focusWidget()->clearFocus();
+    case Qt::AltModifier:
+        switch (event->key()) {
+        case Qt::Key_F:
+            ftp_settings->show();
+            break;
+        default:
+            break;
+        }
         break;
     default:
         break;
     }
+
+
 }
 
 void Demo::on_FPS_OPTION_1_currentIndexChanged(int index)
@@ -1162,15 +1266,22 @@ void Demo::stop()
     communicate_display();
 }
 
+void Demo::check_sum(QByteArray &data)
+{
+    uint sum = 0;
+    for (int i = 1; i < 6; i++) sum += data[i];
+    data[6] = sum & 0xFF;
+}
+
 uchar Demo::check_sum()
 {
-    int sum = 0;
+    uint sum = 0;
     for (int i = 1; i < 6; i++) sum += buffer_out[i];
     return sum & 0xFF;
 }
 
 void Demo::ptz_control_button_pressed(int id) {
-    qDebug("%dp\n", id);
+    qDebug("%dp", id);
     switch(id){
     case 0: send_ptz_cmd(0x08); send_ptz_cmd(0x04);  break;
     case 1: send_ptz_cmd(0x08);                      break;
@@ -1238,7 +1349,7 @@ void Demo::read_command_file()
 
 void Demo::ptz_control_button_released(int id) {
     if (id == 4) return;
-    qDebug("%dr\n", id);
+    qDebug("%dr", id);
     stop();
 }
 
@@ -1296,7 +1407,7 @@ void Demo::point_ptz_to_target(QPoint target)
     static int display_width, display_height;
     //TODO config params for max zoom
 //    static float tot_h = 15, tot_v = 12;// large FOV
-    static float tot_h = 2.8, tot_v = 2.2;//small FOV
+    static float tot_h = 2.8, tot_v = 2.2;// small FOV
     display_width = ui->DISPLAY_2->width();
     display_height = ui->DISPLAY_2->height();
     angle_h += target.x() * tot_h / display_width - tot_h / 2;
@@ -1305,4 +1416,55 @@ void Demo::point_ptz_to_target(QPoint target)
     move(angle_h, false);
     QThread::msleep(30);
     move(angle_v, true);
+}
+
+void Demo::on_ICR_CHK_stateChanged(int arg1)
+{
+    if (!logged_in[0]) return;
+    DWORD size = 0;
+    NET_ITC_ICRCFG dev_icr_config = {0};
+    NET_DVR_GetDVRConfig(device_info[0].lLoginID, NET_ITC_GET_ICRCFG, 1, &dev_icr_config, sizeof(NET_ITC_ICRCFG), &size);
+    qDebug() << "icr error: " << NET_DVR_GetLastError();
+    dev_icr_config.uICRParam.struICRManualSwitch.bySubSwitchMode = arg1 + 1;
+    NET_DVR_SetDVRConfig(device_info[0].lLoginID, NET_ITC_GET_ICRCFG, 1, &dev_icr_config, sizeof(NET_ITC_ICRCFG));
+}
+
+void Demo::on_DISPLAY_1_CHK_stateChanged(int arg1)
+{
+    if (!show_rg2) ui->DISPLAY_2_CHK->click();
+
+    if (show_rg1 = arg1) {
+        // remove the 110 spacing
+        window()->resize(window()->width(), window()->height() + ui->DISPLAY_GRP_2->height() * 15 / 16 - 110);
+        window()->setMinimumHeight(window()->minimumHeight() + 270);
+        ui->CONTROL_1->show();
+        ui->DISPLAY_GRP_1->show();
+    }
+    else {
+        // add spacing of 110
+        window()->setMinimumHeight(window()->minimumHeight() - 270);
+        window()->resize(window()->width(), window()->height() - ui->DISPLAY_GRP_1->height() + 110);
+        ui->CONTROL_1->hide();
+        ui->DISPLAY_GRP_1->hide();
+    }
+}
+
+void Demo::on_DISPLAY_2_CHK_stateChanged(int arg1)
+{
+    if (!show_rg1) ui->DISPLAY_1_CHK->click();
+
+    if (show_rg2 = arg1) {
+        // remove the 80+24 spacing
+        window()->resize(window()->width(), window()->height() + ui->DISPLAY_GRP_1->height() * 16 / 15 - 134);
+        window()->setMinimumHeight(window()->minimumHeight() + 270);
+        ui->CONTROL_2->show();
+        ui->DISPLAY_GRP_2->show();
+    }
+    else {
+        // add spacing of 80+24
+        window()->setMinimumHeight(window()->minimumHeight() - 270);
+        window()->resize(window()->width(), window()->height() - ui->DISPLAY_GRP_2->height() + 134);
+        ui->CONTROL_2->hide();
+        ui->DISPLAY_GRP_2->hide();
+    }
 }

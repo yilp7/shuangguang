@@ -216,19 +216,19 @@ DLLEXPORT_API int __stdcall StartSubVideoCapture(HANDLE hChannelHandle);
 DLLEXPORT_API int __stdcall StopSubVideoCapture(HANDLE hChannelHandle);
 DLLEXPORT_API int __stdcall SetupDateTime(HANDLE hChannelHandle, SYSTEMTIME *now);
 /*
-    ÒÔÏÂÎª1.7°æ±¾ĞÂÔöµÄ¹¦ÄÜ¡£
-    ÒÔºó¿ÉÄÜ»á¸ù¾İÓÃ»§µÄ·´À¡½øĞĞĞŞ¸ÄºÍÍêÉÆ¡£
+    ä»¥ä¸‹ä¸º1.7ç‰ˆæœ¬æ–°å¢çš„åŠŸèƒ½ã€‚
+    ä»¥åå¯èƒ½ä¼šæ ¹æ®ç”¨æˆ·çš„åé¦ˆè¿›è¡Œä¿®æ”¹å’Œå®Œå–„ã€‚
 */
-//Ô­Ê¼Í¼ÏñÁ÷ÉèÖÃ
+//åŸå§‹å›¾åƒæµè®¾ç½®
 typedef void (*IMAGE_STREAM_CALLBACK)(UINT channelNumber,void *context );
 DLLEXPORT_API int __stdcall SetImageStream(HANDLE hChannel,BOOL bStart,UINT fps,UINT width,UINT height,unsigned char *imageBuffer);
 DLLEXPORT_API int __stdcall RegisterImageStreamCallback(IMAGE_STREAM_CALLBACK,void *context);
 /*
-    ÉèÖÃÊÓÆµÊäÈëÎ»ÖÃ£º
-        (x,y)ÎªÏµÍ³Ëù´¦ÀíÍ¼ÏñµÄ×óÉÏ½ÇÔÚÉãÏñ»úÊäÈëµÄÔ­Ê¼Í¼ÏñÖĞµÄ×ø±ê¡£
-        x±ØĞëÎª2µÄÕûÊı±¶¡£
-        (x,y)×ø±êµÄ²ÎÊı·¶Î§ºÍÉãÏñ»úµÄĞÍºÅÓĞ¹Ø£¬Èç¹ûÖ¸¶¨µÄÖµºÍÉãÏñ»úµÄÊäÈë²»Æ¥Åä£¬
-    ¿ÉÄÜ»áµ¼ÖÂÍ¼Ïñ¾²Ö¹»òË®Æ½¡¢´¹Ö±·½Ïò¹ö¶¯¡£
+    è®¾ç½®è§†é¢‘è¾“å…¥ä½ç½®ï¼š
+        (x,y)ä¸ºç³»ç»Ÿæ‰€å¤„ç†å›¾åƒçš„å·¦ä¸Šè§’åœ¨æ‘„åƒæœºè¾“å…¥çš„åŸå§‹å›¾åƒä¸­çš„åæ ‡ã€‚
+        xå¿…é¡»ä¸º2çš„æ•´æ•°å€ã€‚
+        (x,y)åæ ‡çš„å‚æ•°èŒƒå›´å’Œæ‘„åƒæœºçš„å‹å·æœ‰å…³ï¼Œå¦‚æœæŒ‡å®šçš„å€¼å’Œæ‘„åƒæœºçš„è¾“å…¥ä¸åŒ¹é…ï¼Œ
+    å¯èƒ½ä¼šå¯¼è‡´å›¾åƒé™æ­¢æˆ–æ°´å¹³ã€å‚ç›´æ–¹å‘æ»šåŠ¨ã€‚
 */
 DLLEXPORT_API int __stdcall SetInputVideoPosition(HANDLE hChannel,UINT x,UINT y);
 DLLEXPORT_API int __stdcall StopRegisterDrawFun(DWORD nport);
@@ -236,19 +236,19 @@ DLLEXPORT_API int __stdcall StopRegisterDrawFun(DWORD nport);
 /*
     3.0
 */
-#define SERIAL_NUMBER_LENGTH    12    //°å¿¨ĞòÁĞºÅ³¤¶È
+#define SERIAL_NUMBER_LENGTH    12    //æ¿å¡åºåˆ—å·é•¿åº¦
 typedef struct tagDS_BOARD_DETAIL
 {
-    BOARD_TYPE_DS type;                    //°å¿¨ÀàĞÍ
-    BYTE sn[16];                        //ĞòÁĞºÅ
-    UINT dspCount;                        //°å¿¨°üº¬µÄDSP¸öÊı
-    UINT firstDspIndex;                    //°å¿¨ÉÏµÚÒ»¸öDSPµÄË÷Òı
-    UINT encodeChannelCount;            //°å¿¨°üº¬µÄ±àÂëÍ¨µÀ¸öÊı
-    UINT firstEncodeChannelIndex;        //°å¿¨ÉÏµÚÒ»¸ö±àÂëÍ¨µÀµÄË÷Òı
-    UINT decodeChannelCount;            //°å¿¨°üº¬µÄ½âÂëÍ¨µÀ¸öÊı
-    UINT firstDecodeChannelIndex;        //°å¿¨ÉÏµÚÒ»¸ö½âÂëÍ¨µÀµÄË÷Òı
-    UINT displayChannelCount;            //°å¿¨°üº¬µÄÊÓÆµÊä³öÍ¨µÀ¸öÊı
-    UINT firstDisplayChannelIndex;        //°å¿¨ÉÏµÚÒ»¸öÊÓÆµÊä³öÍ¨µÀµÄË÷Òı
+    BOARD_TYPE_DS type;                    //æ¿å¡ç±»å‹
+    BYTE sn[16];                        //åºåˆ—å·
+    UINT dspCount;                        //æ¿å¡åŒ…å«çš„DSPä¸ªæ•°
+    UINT firstDspIndex;                    //æ¿å¡ä¸Šç¬¬ä¸€ä¸ªDSPçš„ç´¢å¼•
+    UINT encodeChannelCount;            //æ¿å¡åŒ…å«çš„ç¼–ç é€šé“ä¸ªæ•°
+    UINT firstEncodeChannelIndex;        //æ¿å¡ä¸Šç¬¬ä¸€ä¸ªç¼–ç é€šé“çš„ç´¢å¼•
+    UINT decodeChannelCount;            //æ¿å¡åŒ…å«çš„è§£ç é€šé“ä¸ªæ•°
+    UINT firstDecodeChannelIndex;        //æ¿å¡ä¸Šç¬¬ä¸€ä¸ªè§£ç é€šé“çš„ç´¢å¼•
+    UINT displayChannelCount;            //æ¿å¡åŒ…å«çš„è§†é¢‘è¾“å‡ºé€šé“ä¸ªæ•°
+    UINT firstDisplayChannelIndex;        //æ¿å¡ä¸Šç¬¬ä¸€ä¸ªè§†é¢‘è¾“å‡ºé€šé“çš„ç´¢å¼•
     UINT reserved1;
     UINT reserved2;
     UINT reserved3;
@@ -256,12 +256,12 @@ typedef struct tagDS_BOARD_DETAIL
 }DS_BOARD_DETAIL;
 typedef struct tagDSP_DETAIL
 {
-    UINT encodeChannelCount;            //°å¿¨°üº¬µÄ±àÂëÍ¨µÀ¸öÊı
-    UINT firstEncodeChannelIndex;        //°å¿¨ÉÏµÚÒ»¸ö±àÂëÍ¨µÀµÄË÷Òı
-    UINT decodeChannelCount;            //°å¿¨°üº¬µÄ½âÂëÍ¨µÀ¸öÊı
-    UINT firstDecodeChannelIndex;        //°å¿¨ÉÏµÚÒ»¸ö½âÂëÍ¨µÀµÄË÷Òı
-    UINT displayChannelCount;            //°å¿¨°üº¬µÄÊÓÆµÊä³öÍ¨µÀ¸öÊı
-    UINT firstDisplayChannelIndex;        //°å¿¨ÉÏµÚÒ»¸öÊÓÆµÊä³öÍ¨µÀµÄË÷Òı
+    UINT encodeChannelCount;            //æ¿å¡åŒ…å«çš„ç¼–ç é€šé“ä¸ªæ•°
+    UINT firstEncodeChannelIndex;        //æ¿å¡ä¸Šç¬¬ä¸€ä¸ªç¼–ç é€šé“çš„ç´¢å¼•
+    UINT decodeChannelCount;            //æ¿å¡åŒ…å«çš„è§£ç é€šé“ä¸ªæ•°
+    UINT firstDecodeChannelIndex;        //æ¿å¡ä¸Šç¬¬ä¸€ä¸ªè§£ç é€šé“çš„ç´¢å¼•
+    UINT displayChannelCount;            //æ¿å¡åŒ…å«çš„è§†é¢‘è¾“å‡ºé€šé“ä¸ªæ•°
+    UINT firstDisplayChannelIndex;        //æ¿å¡ä¸Šç¬¬ä¸€ä¸ªè§†é¢‘è¾“å‡ºé€šé“çš„ç´¢å¼•
     UINT reserved1;
     UINT reserved2;
     UINT reserved3;
@@ -424,7 +424,7 @@ DLLEXPORT_API int __stdcall RegisterDecoderVideoCaptureCallback(DECODER_VIDEO_CA
 DLLEXPORT_API int __stdcall HW_SetDecoderVideoCapture(HANDLE hChannel,BOOL bStart,UINT param);
 DLLEXPORT_API int __stdcall HW_InputDataByFrame(HANDLE hChannel,PBYTE pBuf,DWORD nSize);
 /*
-ÈËÁ³¼ì²â½Ó¿Ú:½ö¹©²âÊÔ¡¢ÆÀ¹À£¬ÒÔºó¿ÉÄÜ»á×öĞŞ¸Ä¡£
+äººè„¸æ£€æµ‹æ¥å£:ä»…ä¾›æµ‹è¯•ã€è¯„ä¼°ï¼Œä»¥åå¯èƒ½ä¼šåšä¿®æ”¹ã€‚
 */
 typedef struct
 {

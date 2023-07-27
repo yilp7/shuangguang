@@ -5,10 +5,10 @@
 #include "HCNetSDK.h"
 #include "plaympeg4.h"
 
-#define MAX_CHANS      24              //Éè±¸Ö§³ÖµÄ×î´óÍ¨µÀÊı
-#define MAX_DEVICE     10             //×î´óÉè±¸Êı
-#define MAX_OUTPUTS	   16	//16×î´óµÄ´°¿ÚÊı
-#define MAX_PREVIEWS		512	//¿ÉÔ¤ÀÀµÄ×î´óÊı
+#define MAX_CHANS      24              //è®¾å¤‡æ”¯æŒçš„æœ€å¤§é€šé“æ•°
+#define MAX_DEVICE     10             //æœ€å¤§è®¾å¤‡æ•°
+#define MAX_OUTPUTS	   16	//16æœ€å¤§çš„çª—å£æ•°
+#define MAX_PREVIEWS		512	//å¯é¢„è§ˆçš„æœ€å¤§æ•°
 
 #define MAX_CRUISE_SEQ  32
 #define MAX_CRUISE_POINT 32
@@ -16,29 +16,29 @@
 #define MAX_CRUISE_TIME 255
 #define MAX_CRUISE_SPEED 15
 
-//Éè±¸ÇøÓòÅäÖÃ
-#define TREE_ALL_T	 0        //´ú±í¸ù½Úµã
-#define DEVICETYPE 	 1		  //´ú±íÉè±¸
-#define CHANNELTYPE	 2	      //´ú±íÍ¨µÀ
+//è®¾å¤‡åŒºåŸŸé…ç½®
+#define TREE_ALL_T	 0        //ä»£è¡¨æ ¹èŠ‚ç‚¹
+#define DEVICETYPE 	 1		  //ä»£è¡¨è®¾å¤‡
+#define CHANNELTYPE	 2	      //ä»£è¡¨é€šé“
 
 
-#define DEMO_FULL_WIDTH 1024	//demoÄ¬ÈÏµÄ¿í¶È
-#define DEMO_FULL_HEIGHT 768	//demoÄ¬ÈÏµÄ¸ß¶È
-#define OUTPUT_INTERVAL 4		//Ã¿¸ö»­ÃæµÄ¼ä¸ô´óĞ¡
+#define DEMO_FULL_WIDTH 1024	//demoé»˜è®¤çš„å®½åº¦
+#define DEMO_FULL_HEIGHT 768	//demoé»˜è®¤çš„é«˜åº¦
+#define OUTPUT_INTERVAL 4		//æ¯ä¸ªç”»é¢çš„é—´éš”å¤§å°
 
 
-//¶¨Ê±Æ÷Ê±¼ä
-#define CYCLE_PREVIEW_TIMER 2    //Ñ­»·Ô¤ÀÀ¶¨Ê±Æ÷
+//å®šæ—¶å™¨æ—¶é—´
+#define CYCLE_PREVIEW_TIMER 2    //å¾ªç¯é¢„è§ˆå®šæ—¶å™¨
 
 typedef struct STRU_CHANNEL_INFO
 {
-	char    chChanName[40];     //Í¨µÀÃû³Æ
-	int		iChanIndex;			//¼à¿ØÍ¨µÀºÅ = Êı×éË÷Òı+startchan
-	int		iPicResolution;				//Í¼Æ¬·Ö±æÂÊ
-	int		iPicQuality;				//Í¼Æ¬ÖÊÁ¿
-	char	chAccessChanIP[16];     //ip½ÓÈëÍ¨µÀµÄipµØÖ·
-	BOOL    bEnable;              //ÊÇ·ñÓĞĞ§
-    NET_DVR_DECODERCFG_V30  struDecodercfg;   //Í¨µÀµÄ½âÂëÆ÷ĞÅÏ¢
+	char    chChanName[40];     //é€šé“åç§°
+	int		iChanIndex;			//ç›‘æ§é€šé“å· = æ•°ç»„ç´¢å¼•+startchan
+	int		iPicResolution;				//å›¾ç‰‡åˆ†è¾¨ç‡
+	int		iPicQuality;				//å›¾ç‰‡è´¨é‡
+	char	chAccessChanIP[16];     //ipæ¥å…¥é€šé“çš„ipåœ°å€
+	BOOL    bEnable;              //æ˜¯å¦æœ‰æ•ˆ
+    NET_DVR_DECODERCFG_V30  struDecodercfg;   //é€šé“çš„è§£ç å™¨ä¿¡æ¯
 	STRU_CHANNEL_INFO()
 	{
 		chChanName[0]       ='\0';
@@ -54,12 +54,12 @@ typedef struct STRU_DEVICE_INFO
 {
 
 	LONG    lLoginID;
-	int		iDeviceChanNum;		    //Éè±¸µÄÍ¨µÀÊı
-	int		iStartChan;				//Éè±¸¿ªÊ¼Í¨µÀºÅ
-	int 	iIPChanNum;				//×î´óÊı×ÖÍ¨µÀ¸öÊı
-    int 	iIPStartChan;			//Êı×ÖÍ¨µÀÆğÊ¼Í¨µÀºÅ
-	int		iEnableChanNum;			//ÓĞĞ§Í¨µÀÊı
-	BOOL    bIPRet;                 //ÊÇ·ñÖ§³Öip½ÓÈë
+	int		iDeviceChanNum;		    //è®¾å¤‡çš„é€šé“æ•°
+	int		iStartChan;				//è®¾å¤‡å¼€å§‹é€šé“å·
+	int 	iIPChanNum;				//æœ€å¤§æ•°å­—é€šé“ä¸ªæ•°
+    int 	iIPStartChan;			//æ•°å­—é€šé“èµ·å§‹é€šé“å·
+	int		iEnableChanNum;			//æœ‰æ•ˆé€šé“æ•°
+	BOOL    bIPRet;                 //æ˜¯å¦æ”¯æŒipæ¥å…¥
 	
 	CHANNEL_INFO struChanInfo[MAX_CHANNUM_V30];
 

@@ -1,13 +1,15 @@
 #ifndef DEMO_H
 #define DEMO_H
 
+#include "ftpsettings.h"
+#include "mylabel.h"
+
 #include <QtCore>
 #include <QtWidgets>
 #include <QTextCodec>
 #include <QSerialPort>
 #include "GeneralDef.h"
 #include "opencv2/opencv.hpp"
-#include "mylabel.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Demo; }
@@ -45,6 +47,7 @@ private:
     void setup_com(QSerialPort **com, QString com_num);
     void communicate_display();
     void stop();
+    void check_sum(QByteArray &data);
     uchar check_sum();
     void send_ptz_cmd(uchar dir);
     void move(float angle, bool vertical);
@@ -100,8 +103,16 @@ private slots:
     void on_SET_ANGLE_BTN_clicked();
     void point_ptz_to_target(QPoint target);
 
+    void on_ICR_CHK_stateChanged(int arg1);
+
+    void on_DISPLAY_1_CHK_stateChanged(int arg1);
+    void on_DISPLAY_2_CHK_stateChanged(int arg1);
+
 private:
     Ui::Demo *ui;
+
+    bool                show_rg1;
+    bool                show_rg2;
 
     long                h_play[2];                         // handle
     LOCAL_DEVICE_INFO   device_info[2];
@@ -155,11 +166,13 @@ private:
 
     NET_DVR_COMPRESSIONCFG_V30 dev_config[2];
 
+    uchar               lens_address;
     QString             zoom_in;
     QString             zoom_out;
     QString             focus_near;
     QString             focus_far;
     QString             lens_stop;
 
+    FTPSettings         *ftp_settings;
 };
 #endif // DEMO_H

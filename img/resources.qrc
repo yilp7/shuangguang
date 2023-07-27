@@ -1,25 +1,14 @@
 <RCC>
-    <qresource prefix="/icons">
-        <file>directions/directions_0.png</file>
-        <file>directions/directions_1.png</file>
-        <file>directions/directions_2.png</file>
-        <file>directions/directions_3.png</file>
-        <file>directions/directions_4.png</file>
-        <file>directions/directions_5.png</file>
-        <file>directions/directions_6.png</file>
-        <file>directions/directions_7.png</file>
-        <file>directions/directions_8.png</file>
-        <file>operations/operations_0.png</file>
-        <file>operations/operations_1.png</file>
-        <file>operations/operations_2.png</file>
-        <file>operations/operations_3.png</file>
-        <file>operations/operations_4.png</file>
-        <file>operations/operations_5.png</file>
-        <file>video_control/capture.png</file>
-        <file>video_control/play_start.png</file>
-        <file>video_control/play_stop.png</file>
-        <file>video_control/record_start.png</file>
-        <file>video_control/record_stop.png</file>
+    <qresource prefix="/icons/directions">
+        <file alias="directions_0">directions/directions_0.png</file>
+        <file alias="directions_1">directions/directions_1.png</file>
+        <file alias="directions_2">directions/directions_2.png</file>
+        <file alias="directions_3">directions/directions_3.png</file>
+        <file alias="directions_4">directions/directions_4.png</file>
+        <file alias="directions_5">directions/directions_5.png</file>
+        <file alias="directions_6">directions/directions_6.png</file>
+        <file alias="directions_7">directions/directions_7.png</file>
+        <file alias="directions_8">directions/directions_8.png</file>
     </qresource>
     <qresource prefix="/logo">
         <file>1.png</file>
@@ -31,5 +20,22 @@
     </qresource>
     <qresource prefix="/qt">
         <file>etc/qt.conf</file>
+    </qresource>
+    <qresource prefix="/icons/operations">
+        <file alias="connect">operations/connect.png</file>
+        <file alias="disconnect">operations/disconnect.png</file>
+        <file alias="operations_0">operations/operations_0.png</file>
+        <file alias="operations_1">operations/operations_1.png</file>
+        <file alias="operations_2">operations/operations_2.png</file>
+        <file alias="operations_3">operations/operations_3.png</file>
+        <file alias="operations_4">operations/operations_4.png</file>
+        <file alias="operations_5">operations/operations_5.png</file>
+    </qresource>
+    <qresource prefix="/icons/video_control">
+        <file alias="capture">video_control/capture.png</file>
+        <file alias="play_start">video_control/play_start.png</file>
+        <file alias="play_stop">video_control/play_stop.png</file>
+        <file alias="record_start">video_control/record_start.png</file>
+        <file alias="record_stop">video_control/record_stop.png</file>
     </qresource>
 </RCC>
