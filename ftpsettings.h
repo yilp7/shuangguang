@@ -52,6 +52,8 @@ private slots:
 
     void on_SET_CONFIG_IP_BTN_clicked();
 
+    void on_REBOOT_BTN_clicked();
+
 private:
     Ui::FTPSettings *ui;
 
@@ -67,6 +69,7 @@ private:
     int time_interval;
     int time_start;
     int time_end;
+    QString folder;
 
     struct IPSettings nanopi_ip;
 };

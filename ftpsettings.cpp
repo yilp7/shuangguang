@@ -203,6 +203,7 @@ void FTPSettings::on_GET_CONFIG_BTN_clicked()
     ui->FTP_SERVER_EDT->setText(ftp.ip = config_list[5]);
     ui->FTP_USR_EDT->setText(ftp.usr = config_list[6]);
     ui->FTP_PWD_EDT->setText(ftp.pwd = config_list[7]);
+    ui->UPLOAD_FOLDER_EDT->setText(folder = config_list[8]);
 
     config = exec_cmd(session, "cat /home/pi/config_time");
     config_list.clear();
@@ -233,6 +234,7 @@ void FTPSettings::on_RESET_BTN_clicked()
     ui->FTP_SERVER_EDT->setText("101.200.166.95:9020");
     ui->FTP_USR_EDT->setText("ZONGZUOBIAO");
     ui->FTP_PWD_EDT->setText("ZONGZUOBIAO");
+    ui->UPLOAD_FOLDER_EDT->setText("TEST");
     ui->UPLOAD_INTERVAL_EDT->setText("60");
     ui->WORKING_START_EDT->setValue(-1);
     ui->WORKING_END_EDT->setValue(-1);
@@ -246,17 +248,20 @@ void FTPSettings::on_SET_CONFIG_FTP_BTN_clicked()
 {
     if (!session) return;
 
-    QString cmd = "echo device                             > /home/pi/config && "
-                  "echo " + ui->DEVICE_IP_EDT->text()  + ">> /home/pi/config && "
-//                  "echo " + ui->DEVICE_USR_EDT->text() + ">> /home/pi/config && "
-                  "echo admin                             >> /home/pi/config && "
-//                  "echo " + ui->DEVICE_PWD_EDT->text() + ">> /home/pi/config && "
-                  "echo abcd1234                          >> /home/pi/config && "
-                  "echo                                   >> /home/pi/config && "
-                  "echo ftp                               >> /home/pi/config && "
-                  "echo " + ui->FTP_SERVER_EDT->text() + ">> /home/pi/config && "
-                  "echo " + ui->FTP_USR_EDT->text() + "   >> /home/pi/config && "
-                  "echo " + ui->FTP_PWD_EDT->text() + "   >> /home/pi/config";
+    QString cmd = "echo device                              > /home/pi/config && "
+                  "echo " + ui->DEVICE_IP_EDT->text()  + " >> /home/pi/config && "
+//                  "echo " + ui->DEVICE_USR_EDT->text() + " >> /home/pi/config && "
+                  "echo admin                              >> /home/pi/config && "
+//                  "echo " + ui->DEVICE_PWD_EDT->text() + " >> /home/pi/config && "
+                  "echo abcd1234                           >> /home/pi/config && "
+                  "echo                                    >> /home/pi/config && "
+                  "echo ftp                                >> /home/pi/config && "
+                  "echo " + ui->FTP_SERVER_EDT->text() + " >> /home/pi/config && "
+                  "echo " + ui->FTP_USR_EDT->text() + "    >> /home/pi/config && "
+                  "echo " + ui->FTP_PWD_EDT->text() + "    >> /home/pi/config && "
+                  "echo " + ui->UPLOAD_FOLDER_EDT->text() + " >> /home/pi/config";
+
+    exec_cmd(session, cmd.toLatin1().constData());
 
     QString working_time_end = ui->WORKING_END_EDT->text().toInt() == -1 ? "25" : ui->WORKING_END_EDT->text();
     cmd = "echo " + ui->UPLOAD_INTERVAL_EDT->text() + " > /home/pi/config_time && "
@@ -282,3 +287,13 @@ void FTPSettings::on_SET_CONFIG_IP_BTN_clicked()
 
     exec_cmd(session, cmd.toLatin1().constData());
 }
+
+void FTPSettings::on_REBOOT_BTN_clicked()
+{
+    if (QMessageBox::question(this, "重启开发板", "确定要重启开发板吗？") == QMessageBox::StandardButton::No) return;
+
+    if (!session) return;
+
+    exec_cmd(session, "reboot");
+}
+

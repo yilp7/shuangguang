@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>420</width>
-    <height>380</height>
+    <height>400</height>
    </rect>
   </property>
   <property name="font">
@@ -536,17 +536,20 @@
    <property name="geometry">
     <rect>
      <x>90</x>
-     <y>280</y>
+     <y>320</y>
      <width>60</width>
      <height>20</height>
     </rect>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
    </property>
   </widget>
   <widget class="QLabel" name="UPLOAD_INTERVAL">
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>280</y>
+     <y>320</y>
      <width>52</width>
      <height>18</height>
     </rect>
@@ -565,7 +568,7 @@
    <property name="geometry">
     <rect>
      <x>160</x>
-     <y>280</y>
+     <y>320</y>
      <width>26</width>
      <height>18</height>
     </rect>
@@ -584,7 +587,7 @@
    <property name="geometry">
     <rect>
      <x>90</x>
-     <y>320</y>
+     <y>360</y>
      <width>40</width>
      <height>20</height>
     </rect>
@@ -606,7 +609,7 @@
    <property name="geometry">
     <rect>
      <x>150</x>
-     <y>320</y>
+     <y>360</y>
      <width>40</width>
      <height>20</height>
     </rect>
@@ -628,7 +631,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>320</y>
+     <y>360</y>
      <width>52</width>
      <height>18</height>
     </rect>
@@ -647,7 +650,7 @@
    <property name="geometry">
     <rect>
      <x>137</x>
-     <y>320</y>
+     <y>360</y>
      <width>6</width>
      <height>18</height>
     </rect>
@@ -660,6 +663,57 @@
    </property>
    <property name="text">
     <string>-</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="REBOOT_BTN">
+   <property name="geometry">
+    <rect>
+     <x>290</x>
+     <y>360</y>
+     <width>40</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Microsoft YaHei</family>
+     <pointsize>8</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>重启</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="UPLOAD_FOLDER">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>280</y>
+     <width>104</width>
+     <height>18</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Microsoft YaHei</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>文件夹（非中文）</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="UPLOAD_FOLDER_EDT">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>280</y>
+     <width>80</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
    </property>
   </widget>
  </widget>
