@@ -6,7 +6,10 @@ FTPSettings::FTPSettings(QWidget *parent) :
     ui(new Ui::FTPSettings),
     logged_in(false),
     session(NULL),
-    nanopi{"", "root", "fa"}
+    nanopi{"", "root", "fa"},
+    time_interval(60),
+    time_start(-1),
+    time_end(-1)
 {
     ui->setupUi(this);
 
@@ -46,7 +49,7 @@ LIBSSH2_SESSION *FTPSettings::login(libssh2_socket_t &sock, int &result)
     sin.sin_port = htons(22);
     sin.sin_addr.s_addr = hostaddr;
     qInfo() << qPrintable(QString::asprintf("Connecting to %s:%d as user %s", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port), nanopi.usr.toLatin1().constData()));
-    if (::connect(sock, (struct sockaddr*)(&sin), sizeof(struct sockaddr_in))) {
+    if (result = ::connect(sock, (struct sockaddr*)(&sin), sizeof(struct sockaddr_in))) {
         qWarning() << "failed to connect!";
         return NULL;
     }
@@ -161,6 +164,8 @@ void FTPSettings::keyPressEvent(QKeyEvent *event)
 
         if (edit == ui->NANOPI_IP_EDT) ui->CONNECT_TO_NANOPI_BTN->click();
         else if (edit == ui->CUSTOM_CMD_EDT) ui->SEND_CMD_BTN->click();
+        else if (edit == ui->UPLOAD_INTERVAL_EDT) if (edit->text().toInt() < 5) edit->setText("5");
+
         this->focusWidget()->clearFocus();
 
         break;
@@ -174,6 +179,7 @@ void FTPSettings::on_CONNECT_TO_NANOPI_BTN_clicked()
     session = login(sock, result);
     if (result) exit_ssh(session, sock);
     logged_in = !result;
+    QMessageBox::warning(this, "", logged_in ? "连接成功" : "未连接成功");
 }
 
 void FTPSettings::on_SEND_CMD_BTN_clicked()
@@ -190,13 +196,22 @@ void FTPSettings::on_GET_CONFIG_BTN_clicked()
     QString config = exec_cmd(session, "cat /home/pi/config");
 
     QStringList config_list = config.split(" ");
-    if (config_list.size() < 8) return;
+    if (config_list.size() < 9) return;
     ui->DEVICE_IP_EDT->setText(device.ip = config_list[1]);
-    ui->DEVICE_USR_EDT->setText(device.usr = config_list[2]);
-    ui->DEVICE_PWD_EDT->setText(device.pwd = config_list[3]);
+//    ui->DEVICE_USR_EDT->setText(device.usr = config_list[2]);
+//    ui->DEVICE_PWD_EDT->setText(device.pwd = config_list[3]);
     ui->FTP_SERVER_EDT->setText(ftp.ip = config_list[5]);
     ui->FTP_USR_EDT->setText(ftp.usr = config_list[6]);
     ui->FTP_PWD_EDT->setText(ftp.pwd = config_list[7]);
+
+    config = exec_cmd(session, "cat /home/pi/config_time");
+    config_list.clear();
+    config_list = config.split(" ");
+    if (config_list.size() < 3) return;
+    ui->UPLOAD_INTERVAL_EDT->setText(QString::number(time_interval = config_list[0].toInt()));
+    ui->WORKING_START_EDT->setValue(time_start = config_list[1].toInt());
+    time_end = config_list[2].toInt();
+    ui->WORKING_END_EDT->setValue(time_end == 25 ? -1 : time_end);
 
     config = exec_cmd(session, "cat /etc/network/interfaces");
 
@@ -213,11 +228,14 @@ void FTPSettings::on_GET_CONFIG_BTN_clicked()
 void FTPSettings::on_RESET_BTN_clicked()
 {
     ui->DEVICE_IP_EDT->setText("192.168.1.200");
-    ui->DEVICE_USR_EDT->setText("admin");
-    ui->DEVICE_PWD_EDT->setText("abcd1234");
+//    ui->DEVICE_USR_EDT->setText("admin");
+//    ui->DEVICE_PWD_EDT->setText("abcd1234");
     ui->FTP_SERVER_EDT->setText("101.200.166.95:9020");
     ui->FTP_USR_EDT->setText("ZONGZUOBIAO");
     ui->FTP_PWD_EDT->setText("ZONGZUOBIAO");
+    ui->UPLOAD_INTERVAL_EDT->setText("60");
+    ui->WORKING_START_EDT->setValue(-1);
+    ui->WORKING_END_EDT->setValue(-1);
     ui->STATIC_IP_EDT->setText("192.168.1.199");
     ui->SUBNET_MASK_EDT->setText("255.255.255.0");
     ui->GATEWAY_EDT->setText("192.168.1.1");
@@ -230,13 +248,20 @@ void FTPSettings::on_SET_CONFIG_FTP_BTN_clicked()
 
     QString cmd = "echo device                             > /home/pi/config && "
                   "echo " + ui->DEVICE_IP_EDT->text()  + ">> /home/pi/config && "
-                  "echo " + ui->DEVICE_USR_EDT->text() + ">> /home/pi/config && "
-                  "echo " + ui->DEVICE_PWD_EDT->text() + ">> /home/pi/config && "
+//                  "echo " + ui->DEVICE_USR_EDT->text() + ">> /home/pi/config && "
+                  "echo admin                             >> /home/pi/config && "
+//                  "echo " + ui->DEVICE_PWD_EDT->text() + ">> /home/pi/config && "
+                  "echo abcd1234                          >> /home/pi/config && "
                   "echo                                   >> /home/pi/config && "
                   "echo ftp                               >> /home/pi/config && "
                   "echo " + ui->FTP_SERVER_EDT->text() + ">> /home/pi/config && "
                   "echo " + ui->FTP_USR_EDT->text() + "   >> /home/pi/config && "
                   "echo " + ui->FTP_PWD_EDT->text() + "   >> /home/pi/config";
+
+    QString working_time_end = ui->WORKING_END_EDT->text().toInt() == -1 ? "25" : ui->WORKING_END_EDT->text();
+    cmd = "echo " + ui->UPLOAD_INTERVAL_EDT->text() + " > /home/pi/config_time && "
+          "echo " + ui->WORKING_START_EDT->text() + "  >> /home/pi/config_time && "
+          "echo " + working_time_end + "               >> /home/pi/config_time";
 
     exec_cmd(session, cmd.toLatin1().constData());
 }
@@ -244,11 +269,16 @@ void FTPSettings::on_SET_CONFIG_FTP_BTN_clicked()
 void FTPSettings::on_SET_CONFIG_IP_BTN_clicked()
 {
     if (!session) return;
-
+#if 0
     QString cmd = "sed -i '/address /s/" + nanopi_ip.ip + "/" + ui->STATIC_IP_EDT->text() + "/'           /etc/network/interfaces && "
                   "sed -i '/netmask /s/" + nanopi_ip.netmask + "/" + ui->SUBNET_MASK_EDT->text() + "/'    /etc/network/interfaces && "
                   "sed -i '/gateway /s/" + nanopi_ip.gateway + "/" + ui->SUBNET_MASK_EDT->text() + "/'    /etc/network/interfaces && "
                   "sed -i '/dns-nameservers /s/" + nanopi_ip.dns + "/" + ui->DNS_SERVER_EDT->text() + "/' /etc/network/interfaces";
+#endif
+    QString cmd = "sed -i '12 s/" + nanopi_ip.ip + "/" + ui->STATIC_IP_EDT->text() + "/'           /etc/network/interfaces && "
+                  "sed -i '13 s/" + nanopi_ip.netmask + "/" + ui->SUBNET_MASK_EDT->text() + "/'    /etc/network/interfaces && "
+                  "sed -i '14 s/" + nanopi_ip.gateway + "/" + ui->GATEWAY_EDT->text() + "/'        /etc/network/interfaces && "
+                  "sed -i '15 s/" + nanopi_ip.dns + "/" + ui->DNS_SERVER_EDT->text() + "/'         /etc/network/interfaces";
 
     exec_cmd(session, cmd.toLatin1().constData());
 }

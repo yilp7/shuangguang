@@ -181,6 +181,7 @@ Demo::Demo(QWidget *parent)
 
     ftp_settings = new FTPSettings();
 
+    ui->DISPLAY_1_CHK->click();
 //    this->show();
 }
 

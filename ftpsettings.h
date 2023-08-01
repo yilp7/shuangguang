@@ -64,6 +64,10 @@ private:
     struct AuthInfoGrp device;
     struct AuthInfoGrp ftp;
 
+    int time_interval;
+    int time_start;
+    int time_end;
+
     struct IPSettings nanopi_ip;
 };
 
